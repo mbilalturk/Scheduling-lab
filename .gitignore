@@ -1,0 +1,34 @@
+# Dependencies and generated output
+/node_modules/
+/dist/
+/.test-build/
+/coverage/
+/.vite/
+*.tsbuildinfo
+
+# Local work, evidence and preserved backups
+/tmp/
+/output/
+/.local/
+/backups/
+/docs/superpowers/
+/docs/react-migration-verification.md
+/CSE513-Assignment-1.pdf
+
+# Local environment and hosting CLI state
+.env
+.env.*
+!.env.example
+*.local
+/.vercel/
+/.netlify/
+
+# Logs and editor / operating-system files
+*.log
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo

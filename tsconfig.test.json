@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": false,
+    "rootDir": ".",
+    "outDir": ".test-build",
+    "sourceMap": true
+  },
+  "include": [
+    "src/core/**/*.ts",
+    "src/application/**/*.ts",
+    "src/ui/timelineModel.ts",
+    "src/workloads.ts",
+    "tests/**/*.js"
+  ],
+  "exclude": ["node_modules", "dist", ".test-build", "tmp", "backups"]
+}
