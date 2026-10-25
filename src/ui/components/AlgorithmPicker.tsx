@@ -1,4 +1,5 @@
 import type { Algorithm } from "../../core/types.js";
+import { useId } from "react";
 
 export const algorithmInfo: Record<
   Algorithm,
@@ -33,33 +34,63 @@ export const algorithmInfo: Record<
 interface Props {
   algorithm: Algorithm;
   onChange: (algorithm: Algorithm) => void;
+  quantum: string;
+  onQuantumChange: (value: string) => void;
 }
-export function AlgorithmPicker({ algorithm, onChange }: Props) {
+export function AlgorithmPicker({
+  algorithm,
+  onChange,
+  quantum,
+  onQuantumChange,
+}: Props) {
+  const groupId = useId();
   return (
-    <div
-      className="algorithm-picker"
-      role="group"
-      aria-label="Scheduling algorithm"
-    >
-      {(Object.keys(algorithmInfo) as Algorithm[]).map((id, index) => (
-        <button
-          key={id}
-          type="button"
-          aria-pressed={algorithm === id}
-          onClick={() => onChange(id)}
-          className={`algorithm-option ${algorithm === id ? "selected" : ""}`}
-        >
-          <span className="algorithm-top">
-            <span className="algorithm-code">{id}</span>
-            <span className="algorithm-number">0{index + 1}</span>
-          </span>
-          <span className="algorithm-name">{algorithmInfo[id].name}</span>
-          <span className="algorithm-kind">
-            {algorithmInfo[id].kind}
-            {algorithm === id && <span aria-hidden="true"> ↗</span>}
-          </span>
-        </button>
-      ))}
-    </div>
+    <fieldset className="policy-fields">
+      <legend>Scheduling policy</legend>
+      <div className="algorithm-picker">
+        {(Object.keys(algorithmInfo) as Algorithm[]).map((id) => (
+          <label
+            key={id}
+            className={`algorithm-option ${algorithm === id ? "selected" : ""}`}
+          >
+            <input
+              type="radio"
+              name={groupId}
+              value={id}
+              checked={algorithm === id}
+              onChange={() => onChange(id)}
+              aria-label={`${id} · ${algorithmInfo[id].name}`}
+            />
+            <span>
+              <b className="algorithm-code">{id}</b>
+              <span className="algorithm-name">{algorithmInfo[id].name}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      <p className="policy-note" id={`${groupId}-hint`}>
+        {algorithmInfo[algorithm].description}
+      </p>
+      {algorithm === "RR" && (
+        <div className="quantum-row">
+          <div>
+            <label htmlFor={`${groupId}-quantum`}>Time quantum</label>
+            <p className="helper" id={`${groupId}-quantum-hint`}>
+              Maximum CPU time per turn.
+            </p>
+          </div>
+          <input
+            id={`${groupId}-quantum`}
+            aria-label="Time quantum"
+            aria-describedby={`${groupId}-quantum-hint`}
+            type="number"
+            min="1"
+            step="1"
+            value={quantum}
+            onChange={(event) => onQuantumChange(event.target.value)}
+          />
+        </div>
+      )}
+    </fieldset>
   );
 }

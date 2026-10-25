@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { workloads, type WorkloadKey } from "../../workloads.js";
 
 interface Props {
@@ -6,42 +6,35 @@ interface Props {
   onLoad: (workload: WorkloadKey) => void;
 }
 export function WorkloadControls({ active, onLoad }: Props) {
-  const [extra, setExtra] = useState<WorkloadKey>("idle");
+  const [selected, setSelected] = useState<WorkloadKey>(
+    active === "custom" ? "A" : active,
+  );
+  const pickerId = useId();
   return (
-    <section className="workload-controls" aria-labelledby="examples-heading">
-      <label id="examples-heading">Start with an example</label>
-      <div className="example-buttons">
-        <button
-          type="button"
-          className={active === "A" ? "active" : ""}
-          onClick={() => onLoad("A")}
-        >
-          Workload A <span>4 processes</span>
-        </button>
-        <button
-          type="button"
-          className={active === "B" ? "active" : ""}
-          onClick={() => onLoad("B")}
-        >
-          Workload B <span>4 processes</span>
-        </button>
-      </div>
-      <div className="additional-examples">
+    <div className="workload-controls">
+      <label htmlFor={pickerId}>Example to load</label>
+      <div className="example-row">
         <select
-          aria-label="Additional test workload"
-          value={extra}
-          onChange={(event) => setExtra(event.target.value as WorkloadKey)}
+          id={pickerId}
+          value={selected}
+          onChange={(event) => setSelected(event.target.value as WorkloadKey)}
         >
-          <option value="idle">Test 1 · Idle CPU</option>
-          <option value="tie">Test 2 · Simultaneous ties</option>
-          <option value="preemption">Test 3 · SRTF preemption</option>
+          <optgroup label="Assignment workloads">
+            <option value="A">Workload A</option>
+            <option value="B">Workload B</option>
+          </optgroup>
+          <optgroup label="Additional tests">
+            <option value="idle">Test 1 · Idle CPU</option>
+            <option value="tie">Test 2 · Simultaneous ties</option>
+            <option value="preemption">Test 3 · SRTF preemption</option>
+          </optgroup>
         </select>
         <button
           type="button"
           className="load-test"
-          onClick={() => onLoad(extra)}
+          onClick={() => onLoad(selected)}
         >
-          Load test
+          Load example
         </button>
       </div>
       <p className="helper example-description">
@@ -49,6 +42,6 @@ export function WorkloadControls({ active, onLoad }: Props) {
           ? "Custom workload. Edit any value to explore a different schedule."
           : workloads[active].description}
       </p>
-    </section>
+    </div>
   );
 }

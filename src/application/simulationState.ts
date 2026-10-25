@@ -12,14 +12,25 @@ export interface DraftProcess {
   readonly arrival: string;
   readonly burst: string;
 }
+export interface RunSnapshot {
+  readonly result: SimulationResult;
+  readonly options: SchedulingOptions;
+  readonly workload: WorkloadKey | "custom";
+  readonly revision: number;
+}
 export type Outcome =
-  | { readonly status: "draft" }
-  | { readonly status: "error"; readonly message: string }
+  | { readonly status: "draft"; readonly previousRun: RunSnapshot | null }
   | {
-      readonly status: "success";
-      readonly result: SimulationResult;
-      readonly options: SchedulingOptions;
-    };
+      readonly status: "error";
+      readonly message: string;
+      readonly previousRun: RunSnapshot | null;
+    }
+  | ({ readonly status: "success" } & RunSnapshot);
+
+/** Read the last successful run independently from the editable draft. */
+export function getLastRun(outcome: Outcome): RunSnapshot | null {
+  return outcome.status === "success" ? outcome : outcome.previousRun;
+}
 export interface SimulationState {
   readonly rows: readonly DraftProcess[];
   readonly nextKey: number;
@@ -52,7 +63,7 @@ export function createInitialState(): SimulationState {
     quantum: "2",
     workload: "A",
     revision: 0,
-    outcome: { status: "draft" },
+    outcome: { status: "draft", previousRun: null },
   };
 }
 
@@ -68,7 +79,7 @@ function draftRows(workload: WorkloadKey, firstKey: number): DraftProcess[] {
 const numeric = (text: string): number =>
   text.trim() === "" ? NaN : Number(text);
 
-/** All transitions are pure; changing an input always invalidates its old output. */
+/** Edits invalidate freshness, not the last successful result or its context. */
 export function simulationReducer(
   state: SimulationState,
   action: Action,
@@ -76,7 +87,7 @@ export function simulationReducer(
   const draft: SimulationState = {
     ...state,
     revision: state.revision + 1,
-    outcome: { status: "draft" },
+    outcome: { status: "draft", previousRun: getLastRun(state.outcome) },
   };
   switch (action.type) {
     case "edit":
@@ -135,12 +146,22 @@ export function simulationReducer(
             ? { algorithm: "RR", quantum: numeric(state.quantum) }
             : { algorithm: state.algorithm };
         const result = runSimulation(input, options);
-        return { ...draft, outcome: { status: "success", result, options } };
+        return {
+          ...draft,
+          outcome: {
+            status: "success",
+            result,
+            options,
+            workload: state.workload,
+            revision: draft.revision,
+          },
+        };
       } catch (error) {
         return {
           ...draft,
           outcome: {
             status: "error",
+            previousRun: getLastRun(state.outcome),
             message:
               error instanceof Error
                 ? error.message

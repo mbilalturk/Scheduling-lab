@@ -24,17 +24,14 @@ export function SummaryCards({ averages }: { averages: Averages }) {
   ] as const;
   return (
     <div className="summary-grid">
-      {cards.map((card, index) => (
+      {cards.map((card) => (
         <section
-          className={`summary-card summary-${index}`}
+          className="summary-card"
           key={card.key}
           aria-label={`Average ${card.name.toLowerCase()}`}
         >
           <div className="summary-label">
             <span>AVG. {card.name.toUpperCase()}</span>
-            <span className="metric-symbol" aria-hidden="true">
-              {["↗", "◷", "↳"][index]}
-            </span>
           </div>
           <div className="summary-value">
             <strong data-testid={`avg-${card.key}`}>

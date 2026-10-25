@@ -16,7 +16,11 @@ React bileşenleri uygulama durumunu ve çekirdek tiplerini kullanır. Uygulama 
 
 ## Sonuç durumu neden tek bir union?
 
-`Outcome`, yalnızca `draft`, `error` veya `success` olabilir. Ayrı `isLoading`, `hasResult`, `errorMessage` gibi birbiriyle çelişebilen bayraklar tutmuyoruz. Düzenleme, algoritma değiştirme veya yükleme, sonucu tek reducer geçişinde `draft` yapar. Başarılı sonuç kendi seçenek snapshot'ıyla saklanır.
+`Outcome`, yalnızca `draft`, `error` veya `success` olabilir. Ayrı `isLoading`, `hasResult`, `errorMessage` gibi birbiriyle çelişebilen bayraklar tutmuyoruz. Düzenleme, algoritma değiştirme veya yükleme, durumu tek reducer geçişinde `draft` yapar. Ancak son başarılı çalıştırmayı silmez.
+
+`RunSnapshot`, sonucu; kullanılan algoritma/quantum, iş yükü adı ve çalıştırma revizyonuyla birlikte saklar. `draft` ve `error` durumları isteğe bağlı `previousRun` taşır. `getLastRun()` gösterilecek son başarılı çalıştırmayı seçer; görünüm onun eski bir çalıştırma olduğunu açıkça bildirir. Başarılı bir yeniden çalıştırma snapshot'ı tek seferde değiştirir. Böylece ekrandaki sonuçları yanlışlıkla yeni formun algoritmasıyla etiketlemeyiz.
+
+`ConfigurationForm` bütün girdileri tek formda toplar. `SimulationResults`, formun altında tam genişlikte son çalıştırmayı gösterir. Ağır çizelge içeriği memo ile korunur; yalnızca girdiyi düzenlemek aynı eski çizelgenin yeniden hesaplanmasına veya seçili aralığın sıfırlanmasına yol açmaz.
 
 Reducer, eski state ve action alıp yeni state döndüren saf fonksiyondur. Form alanlarını parse edip algoritmayı çağırması da deterministiktir; dış I/O yapmaz. Node testleri bunu React açmadan kontrol eder. React `useReducer` yalnızca bu geçişleri ekrana bağlar.
 

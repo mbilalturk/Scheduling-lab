@@ -16,11 +16,14 @@ for (const action of [
   {type:'edit',key:0,field:'burst',value:'9'}, {type:'add'}, {type:'remove',key:0},
   {type:'load',workload:'B'}, {type:'algorithm',algorithm:'SJF'}, {type:'quantum',value:'4'},
 ]) {
-  test(`${action.type} invalidates the old result atomically`, () => {
+  test(`${action.type} keeps the previous run but marks the draft as changed`, () => {
     const old = run(createInitialState());
     const next = reduce(old,action);
     assert.equal(next.outcome.status,'draft');
     assert.ok(!('result' in next.outcome));
+    assert.equal(next.outcome.previousRun.result,old.outcome.result);
+    assert.deepEqual(next.outcome.previousRun.options,{algorithm:'FCFS'});
+    assert.equal(next.outcome.previousRun.workload,'A');
     assert.ok(next.revision > old.revision);
   });
 }
@@ -28,6 +31,41 @@ test('blank arrival is rejected rather than silently converted to zero', () => {
   const state = run(edit(createInitialState(),0,'arrival',''));
   assert.equal(state.outcome.status,'error');
   assert.match(state.outcome.message,/arrival/i);
+});
+
+test('multiple edits retain the same original snapshot and its run revision', () => {
+  const old=run(createInitialState());
+  let next=edit(old,0,'burst','9');
+  next=reduce(next,{type:'algorithm',algorithm:'RR'});
+  next=reduce(next,{type:'quantum',value:'4'});
+  assert.equal(next.outcome.previousRun.result,old.outcome.result);
+  assert.equal(next.outcome.previousRun.revision,old.outcome.revision);
+  assert.deepEqual(next.outcome.previousRun.result.averages,{turnaround:10.5,waiting:6.75,response:6.75});
+});
+
+test('a failed rerun preserves the last successful run and the validation error', () => {
+  const old=run(createInitialState());
+  const next=run(edit(old,0,'burst',''));
+  assert.equal(next.outcome.status,'error');
+  assert.match(next.outcome.message,/burst/i);
+  assert.equal(next.outcome.previousRun.result,old.outcome.result);
+});
+
+test('successful rerun replaces snapshot context and data together', () => {
+  const old=run(createInitialState());
+  const loaded=reduce(old,{type:'load',workload:'B'});
+  const next=run(reduce(loaded,{type:'algorithm',algorithm:'SJF'}));
+  assert.equal(next.outcome.status,'success');
+  assert.equal(next.outcome.workload,'B');
+  assert.deepEqual(next.outcome.options,{algorithm:'SJF'});
+  assert.deepEqual(next.outcome.result.averages,{turnaround:2.25,waiting:.5,response:.5});
+  assert.ok(next.outcome.revision>old.outcome.revision);
+});
+
+test('error before any successful run does not invent a previous result', () => {
+  const state=run(edit(createInitialState(),0,'burst',''));
+  assert.equal(state.outcome.status,'error');
+  assert.equal(state.outcome.previousRun,null);
 });
 test('duplicate IDs cause a user-visible error without changing row identity', () => {
   const state = edit(createInitialState(),1,'id',' P1 ');

@@ -50,7 +50,7 @@ React components → application reducer/form adapter → pure scheduling core
 
 Core has no React/DOM/network dependencies. Each algorithm copies inputs into its private working records, so runs cannot leak state. Public `readonly` contracts prevent accidental mutation at compile time; runtime immutability of caller inputs is also tested.
 
-DraftProcess fields are strings to preserve empty input while editing. The application converts them to numeric Process records only on Run. Empty strings become NaN, not zero, and validation explains the error. React row keys are separate from editable process IDs. Input edits atomically replace the previous outcome with draft; an error and an old successful result cannot coexist.
+DraftProcess fields are strings to preserve empty input while editing. The application converts them to numeric Process records only on Run. Empty strings become NaN, not zero, and validation explains the error. React row keys are separate from editable process IDs. Input edits mark the draft as changed while retaining the last successful RunSnapshot. Its workload, options and metrics remain together and are visibly labeled as a previous run until a successful update. Validation errors do not destroy that snapshot.
 
 The timeline is authoritative for execution; metrics and the interval inspector derive from it. The inspector does not rerun the scheduler. Selection and zoom are transient presentation state.
 
@@ -60,8 +60,8 @@ The timeline is authoritative for execution; metrics and the interval inspector 
 - Twelve hand-calculated A/B cases cover FCFS/SJF/SRTF and RR q=1,2,4, with exact timelines, per-process metrics and averages.
 - Three additional workloads cover idle gaps, simultaneous ties and SRTF preemption/equality.
 - Conservation, arrival, overlap and unnecessary-idle checks run over 320 deterministic workloads.
-- New tests cover typed options, draft parsing, stale-result invalidation, row identity, deletion, loading, RR quantum, immutable reducer behavior and chart/trace derivation.
-- The current suite has 86 tests, including rendered React regressions for chart keyboard focus and interval tooltip text. On the chart, use Left/Right arrows, Home and End; only one interval is in the Tab sequence.
+- New tests cover typed options, draft parsing, previous-run preservation, row identity, deletion, loading, RR quantum, immutable reducer behavior and chart/trace derivation.
+- The current suite has 95 tests, including rendered React regressions for grouped form controls, result context, chart keyboard focus and interval tooltip text. On the chart, use Left/Right arrows, Home and End; only one interval is in the Tab sequence.
 - Expected values never come from the scheduler under test.
 - Test coverage, browser checks and regression examples are documented in [Verification](docs/verification.md). The Node suite is reproducible via npm test; browser checks are not an installed E2E runner.
 

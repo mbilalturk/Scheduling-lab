@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { SimulationResult, SchedulingOptions } from "../../core/types.js";
 import { createTraceEntries, intervalGeometry } from "../timelineModel.js";
 import { formatNumber, processColors } from "../format.js";
@@ -11,6 +11,17 @@ export function GanttChart({ result, options }: Props) {
   const [zoom, setZoom] = useState(1);
   const [selected, setSelected] = useState(0);
   const intervalRefs = useRef<Array<SVGGElement | null>>([]);
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [availableWidth, setAvailableWidth] = useState(768);
+  useEffect(() => {
+    const element = chartRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver(() =>
+      setAvailableWidth(element.clientWidth),
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
   const hatch = useId().replace(/:/g, "");
   const entries = useMemo(() => createTraceEntries(result), [result]);
   const colors = new Map(
@@ -25,7 +36,7 @@ export function GanttChart({ result, options }: Props) {
     0,
   );
   const plotWidth = Math.round(
-    Math.max(720, Math.min(12000, entries.length * 72)) * zoom,
+    Math.max(availableWidth - 48, Math.min(12000, entries.length * 72)) * zoom,
   );
   const current = entries[selected]!;
   const traceStart = Math.floor(selected / 8) * 8;
@@ -35,14 +46,10 @@ export function GanttChart({ result, options }: Props) {
     intervalRefs.current[next]?.focus();
   }
   return (
-    <section
-      className="panel timeline-panel"
-      aria-labelledby="timeline-heading"
-    >
+    <section className="timeline-panel" aria-labelledby="timeline-heading">
       <div className="panel-heading">
         <div>
-          <span className="eyebrow">THE SCHEDULE</span>
-          <h2 id="timeline-heading">CPU timeline</h2>
+          <h3 id="timeline-heading">CPU timeline</h3>
         </div>
         <div className="zoom-control" role="group" aria-label="Timeline zoom">
           {[1, 1.5, 2].map((value) => (
@@ -71,6 +78,7 @@ export function GanttChart({ result, options }: Props) {
       </div>
       <div
         className="chart-scroll"
+        ref={chartRef}
         tabIndex={0}
         role="region"
         aria-label="Scrollable proportional Gantt chart"
@@ -90,13 +98,13 @@ export function GanttChart({ result, options }: Props) {
               height="7"
               patternTransform="rotate(45)"
             >
-              <rect width="7" height="7" fill="#edf0f2" />
+              <rect width="7" height="7" fill="#f3f0eb" />
               <line
                 x1="0"
                 y1="0"
                 x2="0"
                 y2="7"
-                stroke="#d4dde2"
+                stroke="#d5cec4"
                 strokeWidth="2"
               />
             </pattern>
@@ -110,7 +118,7 @@ export function GanttChart({ result, options }: Props) {
                   y1="20"
                   x2={x}
                   y2="113"
-                  stroke="#e2e9ec"
+                  stroke="#e4ddd3"
                   strokeDasharray="3 4"
                 />
                 <text
@@ -171,7 +179,7 @@ export function GanttChart({ result, options }: Props) {
                   fill={
                     entry.id === null ? `url(#${hatch})` : colors.get(entry.id)
                   }
-                  stroke={selected === entry.index ? "#183f3f" : "#fff"}
+                  stroke={selected === entry.index ? "#9b421d" : "#fffdfa"}
                   strokeWidth={selected === entry.index ? 2 : 1.5}
                 />
                 {geometry.width > 35 && (

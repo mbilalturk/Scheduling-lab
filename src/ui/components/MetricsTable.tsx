@@ -7,11 +7,10 @@ export function MetricsTable({
   metrics: readonly ProcessMetrics[];
 }) {
   return (
-    <section className="panel metrics-panel" aria-labelledby="metrics-heading">
+    <section className="metrics-panel" aria-labelledby="metrics-heading">
       <div className="panel-heading">
         <div>
-          <span className="eyebrow">THE NUMBERS</span>
-          <h2 id="metrics-heading">Process metrics</h2>
+          <h3 id="metrics-heading">Process metrics</h3>
         </div>
         <span className="quiet-badge">Input order preserved</span>
       </div>
